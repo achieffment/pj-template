@@ -16,9 +16,3 @@ button, button:hover {
     color: #fff;
     background: #2a6496;
 }
-.container--index {
-    padding-top: 15px;
-    padding-bottom: 15px;
-    min-height: calc(100vh - 120px);
-    max-height: calc(100vh - 120px);
-}

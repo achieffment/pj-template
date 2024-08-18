@@ -7,7 +7,7 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>{#title#}</title>
         {if $styles_head}
-        <link rel="stylesheet" href="{$styles_head}">
+            <link rel="stylesheet" href="{$styles_head}">
         {/if}
     </head>
     <body>

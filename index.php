@@ -1,36 +1,26 @@
 <?php
+error_reporting(E_ERROR);
 
 define("SITE_DIR", __DIR__);
 define("DB_CONN", SITE_DIR . "/db_conn/index.php");
 define("SMARTY_CONFIG_DIR", SITE_DIR . "/config/");
 define("SMARTY_CACHE_DIR", SITE_DIR . "/cache/");
 define("SMARTY_TEMPLATES_DIR", SITE_DIR . "/templates/");
-define("SMARTY_COMPILES_DIR", SITE_DIR . "/templates_c/");
+define("SMARTY_COMPILES_DIR", SITE_DIR . "/templates_compiled/");
 
-require_once SITE_DIR . "/vendor/autoload.php";
+require_once SITE_DIR . "/src/vendor/autoload.php";
+
 use MatthiasMullie\Minify;
 use MiladRahimi\PhpRouter\Router;
 use MiladRahimi\PhpRouter\Exceptions\RouteNotFoundException;
 use Laminas\Diactoros\Response\HtmlResponse;
 
-/*
-    More about composer - https://getcomposer.org/doc/
-
-    Example of usage src folder with composer PSR-4
-    To add your own namespace with autoloader, add it in composer.json with path
-    "autoload": {
-        "psr-4": {
-            "Chieff\\": "src/chieff"
-        }
-    },
-    Classes will be loaded from src/chieff with using chosen namespace:
-    use Chieff\Somelib\Somelib;
-    $somelib = new Somelib();
-*/
-
 $GLOBALS["template"] = "";
 
-/* More about routing - https://github.com/miladrahimi/phprouter */
+/**
+ * More about routing:
+ * https://github.com/miladrahimi/phprouter
+ */
 $router = Router::create();
 $router->get('/', function () {
     $GLOBALS["template"] = "index.tpl";
@@ -42,18 +32,19 @@ $router->get('/page', function () {
 try {
     $router->dispatch();
 } catch (RouteNotFoundException $e) {
-    $router->getPublisher()->publish(new HtmlResponse('Not found.', 404));
+    $router->getPublisher()->publish(new HtmlResponse('Not found', 404));
 } catch (Throwable $e) {
-    $router->getPublisher()->publish(new HtmlResponse('Internal error.', 500));
+    $router->getPublisher()->publish(new HtmlResponse('Internal error', 500));
 }
 
-if (!isset($GLOBALS["template"]) || !$GLOBALS["template"])
-    exit();
+if (empty($GLOBALS["template"])) {
+    exit('No template');
+}
 
-/*
+/**
     More about smarty:
-        https://smarty-php.github.io/smarty/4.x/
-        https://www.smarty.net/
+    https://smarty-php.github.io/smarty/4.x/
+    https://www.smarty.net/
 */
 $smarty = new Smarty();
 $smarty->setConfigDir(SMARTY_CONFIG_DIR);
@@ -66,19 +57,19 @@ $smarty->cache_lifetime = 120;
 
 // Default css and js paths
 $css = [
+    "filename" => "style.css",
     "paths" => [
         "/assets/plugins/node_modules/bootstrap/dist/css/bootstrap-grid.min.css",
         "/assets/css/style.css",
         "/assets/css/additional.css"
-    ],
-    "filename" => "style.css"
+    ]
 ];
 $js = [
+    "filename" => "script.js",
     "paths" => [
         "/assets/plugins/node_modules/jquery/dist/jquery.min.js",
         "/assets/js/script.js"
-    ],
-    "filename" => "script.js"
+    ]
 ];
 
 // Additional paths for another pages
@@ -93,43 +84,71 @@ switch ($GLOBALS["template"]) {
         break;
 }
 
-$clear_cache = false;
+$clearCache = false;
 if (isset($_GET["clear_cache"])) {
-    $clear_cache = true;
+    $clearCache = true;
     $smarty->clearCache($GLOBALS["template"]);
 }
 
-$css = site_minify("css", $css, $clear_cache);
+$css = site_minify("css", $css, $clearCache);
 $smarty->assign('styles_head', $css);
-$js = site_minify("js", $js, $clear_cache);
+
+$js = site_minify("js", $js, $clearCache);
 $smarty->assign('footer_scripts', $js);
 
-/* More about minify - https://github.com/matthiasmullie/minify */
-function site_minify(string $type, array $paths, bool $reload = false) {
-    if (!$type || !$paths || !isset($paths["filename"]))
+/**
+ * More about minify:
+ * https://github.com/matthiasmullie/minify
+ *
+ * @param string $type
+ * @param array $paths
+ * @param bool $reload
+ * @return string
+ * @throws Exception
+ */
+function site_minify(string $type, array $paths, bool $reload = false): string {
+    if (!$type || !$paths || !isset($paths["filename"])) {
         return "";
-    $minified_path = "/assets/compiled/";
-    $minified_full_path = $minified_path . $paths["filename"];
-    $minified_full_server_path = SITE_DIR . $minified_full_path;
-    if (file_exists($minified_full_server_path) && !$reload)
-        return $minified_full_path;
+    }
+
+    $minifiedPath = "/assets/compiled/";
+    $minifiedFilePath = $minifiedPath . $paths["filename"];
+    $minifiedServerPath = SITE_DIR . $minifiedPath;
+    $minifiedServerFilePath = SITE_DIR . $minifiedFilePath;
+
+    if (file_exists($minifiedServerFilePath) && !$reload) {
+        return $minifiedFilePath;
+    }
+
+    if (!is_dir($minifiedServerPath)) {
+        if (!mkdir($minifiedServerPath)) {
+            throw new \Exception('Не удается создать папку для минифицированных файлов');
+        }
+    }
+
     switch ($type) {
         case "css":
             $minifier = new Minify\CSS();
+
             break;
         case "js":
             $minifier = new Minify\JS();
+
             break;
         default:
             return "";
     }
+
     foreach ($paths["paths"] as $path) {
-        if ($path)
+        if ($path) {
             $minifier->add(SITE_DIR . $path);
+        }
     }
-    $minifier->minify($minified_full_server_path);
-    return $minified_full_path;
+
+    $minifier->minify($minifiedServerFilePath);
+
+    return $minifiedFilePath;
 }
 
-$smarty->assign("developer", "chieff");
+$smarty->assign("developer", "achieffment");
 $smarty->display($GLOBALS["template"]);

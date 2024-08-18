@@ -1,28 +1,8 @@
 User-Agent: *
-Disallow: */index.php$
-Disallow: /cache/
-Disallow: /config/
-Disallow: /src/
-Disallow: /templates/
-Disallow: /templates_c/
-Disallow: /vendor/
+Disallow: /
 
 User-Agent: Yandex
-Disallow: */index.php$
-Disallow: /cache/
-Disallow: /config/
-Disallow: /src/
-Disallow: /templates/
-Disallow: /templates_c/
-Disallow: /vendor/
+Disallow: /
 
 User-Agent: Googlebot
-Disallow: */index.php$
-Disallow: /cache/
-Disallow: /config/
-Disallow: /src/
-Disallow: /templates/
-Disallow: /templates_c/
-Disallow: /vendor/
-
-Clean-param: utm_source&source&utm_medium&utm_campaign&utm_campaignid&utm_campaign_id&utm_content&utm_term&utm_adgroup&utm_targetid&utm_feeditemid&utm_creative
+Disallow: /

@@ -1,7 +1,5 @@
-# Включаем симлинки для корректного редиректа некоторых серверов
 Options +FollowSymLinks
-# Убираем листинг файлов, если нет индексного в папке
-Options All -Indexes
+Options -Indexes
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
